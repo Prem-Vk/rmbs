@@ -8,20 +8,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-ROOT_KEY = 'mortgages'
+ROOT_KEY = "mortgages"
 
 # Risk Factors
-LOAN_TYPE_RISK_FACTOR = {'fixed': -1, 'adjustable': 1}
-PROPERTY_TYPE_RISK_FACTOR = {'single_family': 0, 'condo': 1}
+LOAN_TYPE_RISK_FACTOR = {"fixed": -1, "adjustable": 1}
+PROPERTY_TYPE_RISK_FACTOR = {"single_family": 0, "condo": 1}
+
 
 class LoanType(str, Enum):
-    Fixed = 'fixed'
-    Adjustable = 'adjustable'
+    Fixed = "fixed"
+    Adjustable = "adjustable"
 
 
 class PropertyType(str, Enum):
-    Single_family = 'single_family'
-    Condo = 'condo'
+    Single_family = "single_family"
+    Condo = "condo"
 
 
 class MyModel(BaseModel):
@@ -37,6 +38,7 @@ class MyModel(BaseModel):
     Returns:
         _type_: _description_
     """
+
     credit_score: StrictInt
     loan_amount: StrictInt
     property_value: StrictInt
@@ -45,22 +47,20 @@ class MyModel(BaseModel):
     loan_type: LoanType
     property_type: PropertyType
 
-
     @computed_field
     @property
     def loan_to_poperty_value_ratio_risk_factor(self) -> float:
-        ltv = float(f'{(self.loan_amount/self.property_value)*100:.2f}')
+        ltv = float(f"{(self.loan_amount/self.property_value)*100:.2f}")
         if ltv > 90.00:
             return 2
         elif ltv > 80.00:
             return 1
         return 0
 
-
     @computed_field
     @property
     def debt_to_income_ratio_risk_factor(self) -> float:
-        dti = float(f'{(self.debt_amount/self.annual_income)*100:.2f}')
+        dti = float(f"{(self.debt_amount/self.annual_income)*100:.2f}")
         if dti > 50.00:
             return 2
         elif dti > 40.00:
@@ -76,7 +76,7 @@ class MyModel(BaseModel):
             return 0
         return 1
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def check_loan_amount_against_property_value(self):
         if self.loan_amount > self.property_value:
             raise ValueError("Loan amount can only be lesser than property value")
@@ -84,7 +84,8 @@ class MyModel(BaseModel):
 
 
 final_risk_factor = []
-credit_score_total = {'total': 0, 'frequency': 0}
+credit_score_total = {"total": 0, "frequency": 0}
+
 
 def calculate_avg_credit_score_risk_factor(average_credit_score):
     if average_credit_score >= 700:
@@ -92,6 +93,7 @@ def calculate_avg_credit_score_risk_factor(average_credit_score):
     elif average_credit_score < 650:
         return 1
     return 0
+
 
 def get_credit_rating(risk_factors):
     """_summary_
@@ -115,6 +117,7 @@ def get_credit_rating(risk_factors):
             credit_ratings.append("C")
     return credit_ratings
 
+
 def calculate_credit_rating(data):
     """_summary_
     This function takes raw json data or a json file as input and calulates the credit rating
@@ -136,11 +139,13 @@ def calculate_credit_rating(data):
             credit_score_total["total"] += cleaned_data.credit_score
             credit_score_total["frequency"] += 1
             risk_factor = sum(
-                [cleaned_data.loan_to_poperty_value_ratio_risk_factor,
-                cleaned_data.debt_to_income_ratio_risk_factor,
-                cleaned_data.credit_score_risk_factor,
-                LOAN_TYPE_RISK_FACTOR[cleaned_data.loan_type],
-                PROPERTY_TYPE_RISK_FACTOR[cleaned_data.property_type]]
+                [
+                    cleaned_data.loan_to_poperty_value_ratio_risk_factor,
+                    cleaned_data.debt_to_income_ratio_risk_factor,
+                    cleaned_data.credit_score_risk_factor,
+                    LOAN_TYPE_RISK_FACTOR[cleaned_data.loan_type],
+                    PROPERTY_TYPE_RISK_FACTOR[cleaned_data.property_type],
+                ]
             )
             risk_factors.append(risk_factor)
         except ValueError as e:
@@ -169,8 +174,8 @@ def calculate_credit_rating(data):
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filename', help='Path to the JSON file to parse')
-    parser.add_argument('--rawjsondata', help='Raw JSON data to parse')
+    parser.add_argument("--filename", help="Path to the JSON file to parse")
+    parser.add_argument("--rawjsondata", help="Raw JSON data to parse")
     return parser.parse_args()
 
 
@@ -179,7 +184,9 @@ def load_data_from_args(args: argparse.Namespace) -> str:
     To load json data or file name passed from command line
     """
     if args.filename and args.rawjsondata:
-        raise ValueError("Please provide only one source of data (filename or rawjsondata).")
+        raise ValueError(
+            "Please provide only one source of data (filename or rawjsondata)."
+        )
 
     if args.filename:
         return open(args.filename)
